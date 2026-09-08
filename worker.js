@@ -14,9 +14,19 @@ const SOURCES = [
 ];
 
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const url = new URL(request.url);
 
+    if (url.pathname === "/api/ai-test") {
+  const result = await env.AI.run("@cf/meta/llama-3.1-8b-instruct-fast", {
+    prompt: "You are the AI Radar Insights engine. In one short sentence, explain what an AI trend is."
+  });
+
+  return Response.json({
+    success: true,
+    ai: result.response
+  });
+}
     if (url.pathname === "/api/radar") {
       const items = await collectRadar();
       return Response.json({
