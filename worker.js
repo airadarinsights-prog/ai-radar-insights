@@ -28,13 +28,41 @@ export default {
   });
 }
     if (url.pathname === "/api/radar") {
-      const items = await collectRadar();
-      return Response.json({
-        updated: new Date().toISOString(),
-        count: items.length,
-        items
-      });
-    }
+  const items = await collectRadar();
+
+  const newsForAI = items.map(item => ({
+    source: item.source,
+    title: item.title,
+    description: item.description
+  }));
+
+  const result = await env.AI.run("@cf/meta/llama-3.1-8b-instruct-fast", {
+    prompt: `You are the AI Radar Insights engine.
+
+Analyze the following latest AI news.
+
+Find the most important recurring trends, technologies, companies, tools or developments.
+
+Return exactly 5 short insights.
+For each insight include:
+1. Trend
+2. Why it matters
+3. What to watch next
+
+Keep each insight concise and factual.
+Do not invent information.
+
+NEWS:
+${JSON.stringify(newsForAI)}`
+  });
+
+  return Response.json({
+    updated: new Date().toISOString(),
+    count: items.length,
+    insights: result.response,
+    items
+  });
+}
 
     const items = await collectRadar();
 
