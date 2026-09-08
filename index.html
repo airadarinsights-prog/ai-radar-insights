@@ -15,34 +15,38 @@
       color: #111;
     }
 
-    h1 {
-      margin-bottom: 5px;
-    }
+    h1 { margin-bottom: 5px; }
 
     .subtitle {
       color: #666;
       margin-bottom: 25px;
     }
 
-    .status {
-      padding: 12px;
+    .status, .insight, .news {
       background: white;
-      border-radius: 8px;
-      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 18px;
+      margin-bottom: 16px;
     }
 
-    .grid {
+    .insight {
+      border-left: 4px solid #222;
+    }
+
+    .insight h3 {
+      margin-top: 0;
+    }
+
+    .label {
+      font-weight: bold;
+      margin-top: 12px;
+    }
+
+    .news-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 16px;
-    }
-
-    .card {
-      background: white;
-      padding: 18px;
-      border-radius: 10px;
-      border: 1px solid #ddd;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
 
     .source {
@@ -51,28 +55,21 @@
       margin-bottom: 8px;
     }
 
-    .card h3 {
+    .news h3 {
       margin: 5px 0 10px;
-      font-size: 18px;
     }
 
-    .card p {
-      line-height: 1.5;
+    .news p {
       color: #444;
+      line-height: 1.5;
     }
 
-    .link {
-      display: inline-block;
-      margin-top: 10px;
-      text-decoration: none;
+    a {
       font-weight: bold;
     }
 
     .error {
       color: #b00020;
-      background: #fff0f0;
-      padding: 15px;
-      border-radius: 8px;
     }
   </style>
 </head>
@@ -80,68 +77,136 @@
 <body>
 
   <h1>AI Radar Insights</h1>
+
   <p class="subtitle">
-    AI trends, tools and developments — updated automatically.
+    Automated AI trends, tools and insights.
   </p>
 
   <div id="status" class="status">
-    Loading latest AI insights...
+    Loading latest AI Radar...
   </div>
 
-  <div id="content" class="grid"></div>
+  <h2>Today's AI Radar — 5 Insights</h2>
+
+  <div id="insights"></div>
+
+  <h2>Latest AI News</h2>
+
+  <div id="news" class="news-grid"></div>
 
   <script>
     async function loadRadar() {
       const status = document.getElementById("status");
-      const content = document.getElementById("content");
+      const insightsBox = document.getElementById("insights");
+      const newsBox = document.getElementById("news");
 
       try {
         const response = await fetch("/api/radar");
         const data = await response.json();
 
-        if (!data.items || data.items.length === 0) {
-          status.textContent = "No AI news available right now.";
-          return;
+        if (!data.success) {
+          throw new Error("Radar API failed");
         }
 
         status.textContent =
-          "Latest AI Radar • " + data.items.length + " sources";
+          "Live sources: " + (data.count || 0) + " items collected";
 
-        content.innerHTML = data.items.map(item => `
-          <article class="card">
-
-            <div class="source">
-              ${escapeHtml(item.source || "AI Radar")}
-            </div>
-
-            <h3>
-              ${escapeHtml(item.title || "Untitled")}
-            </h3>
-
-            <p>
-              ${escapeHtml(item.description || "")}
-            </p>
-
-            ${
-              item.link
-                ? `<a class="link"
-                    href="${item.link}"
-                    target="_blank"
-                    rel="noopener noreferrer">
-                    Read source →
-                   </a>`
-                : ""
-            }
-
-          </article>
-        `).join("");
+        renderInsights(data.insights || "");
+        renderNews(data.items || []);
 
       } catch (error) {
         status.innerHTML =
-          '<div class="error">Unable to load AI Radar data.</div>';
+          '<span class="error">Unable to load AI Radar data.</span>';
 
         console.error(error);
       }
+    }
+
+    function renderInsights(text) {
+      const box = document.getElementById("insights");
+
+      const cleaned = String(text)
+        .replace(/\\n/g, "\n")
+        .replace(/^Insights:\s*/i, "")
+        .trim();
+
+      const sections = cleaned
+        .split(/\n(?=\s*\d+\.\s)/)
+        .filter(Boolean);
+
+      if (sections.length === 0) {
+        box.innerHTML = "<p>Insights are being generated...</p>";
+        return;
+      }
+
+      box.innerHTML = sections.slice(0, 5).map((section, index) => {
+
+        const content = section
+          .replace(/^\s*\d+\.\s*/, "")
+          .trim();
+
+        const trend = getPart(content, "Trend");
+        const why = getPart(content, "Why it matters");
+        const next = getPart(content, "What to watch next");
+
+        return `
+          <article class="insight">
+            <h3>${index + 1}. ${escapeHtml(trend || content)}</h3>
+
+            ${why ? `
+              <div class="label">Why it matters</div>
+              <div>${escapeHtml(why)}</div>
+            ` : ""}
+
+            ${next ? `
+              <div class="label">What to watch next</div>
+              <div>${escapeHtml(next)}</div>
+            ` : ""}
+          </article>
+        `;
+      }).join("");
+    }
+
+    function getPart(text, label) {
+      const regex = new RegExp(
+        "\\*?" + label + "\\*?\\s*[:\\-]?\\s*([\\s\\S]*?)(?=\\n\\s*\\*?(?:Trend|Why it matters|What to watch next)\\*?\\s*[:\\-]?|$)",
+        "i"
+      );
+
+      const match = text.match(regex);
+      return match ? match[1].trim() : "";
+    }
+
+    function renderNews(items) {
+      const box = document.getElementById("news");
+
+      box.innerHTML = items.slice(0, 15).map(item => `
+        <article class="news">
+
+          <div class="source">
+            ${escapeHtml(item.source || "AI Radar")}
+          </div>
+
+          <h3>
+            ${escapeHtml(item.title || "Untitled")}
+          </h3>
+
+          <p>
+            ${escapeHtml(item.description || "")}
+          </p>
+
+          ${
+            item.link
+              ? `<a href="${escapeHtml(item.link)}"
+                    target="_blank"
+                    rel="noopener noreferrer">
+                    Read source →
+                 </a>`
+              : ""
+          }
+
+        </article>
+      `).join("");
     }
 
     function escapeHtml(value) {
