@@ -79,6 +79,9 @@ function getTag(block, tag) {
 
 
 function getLink(block) {
+  // Atom style:
+  // <link href="...">
+
   let match = block.match(
     /<link[^>]*href=["']([^"']+)["'][^>]*>/i
   );
@@ -87,6 +90,9 @@ function getLink(block) {
     return match[1].trim();
   }
 
+  // RSS style:
+  // <link>...</link>
+
   match = block.match(
     /<link[^>]*>([\s\S]*?)<\/link>/i
   );
@@ -94,6 +100,8 @@ function getLink(block) {
   if (match) {
     return clean(match[1]);
   }
+
+  // GUID fallback
 
   match = block.match(
     /<guid[^>]*>([\s\S]*?)<\/guid>/i
@@ -157,7 +165,8 @@ async function collectRadar() {
           source.url,
           {
             headers: {
-              "User-Agent": "AI-Radar-Insights/1.0"
+              "User-Agent":
+                "AI-Radar-Insights/1.0"
             }
           }
         );
@@ -208,11 +217,16 @@ function parseAIResponse(raw) {
 
   let text = String(raw).trim();
 
+  // Remove markdown code fences
+
   text = text
     .replace(/^```json\s*/i, "")
     .replace(/^```\s*/i, "")
     .replace(/\s*```$/i, "")
     .trim();
+
+
+  // Find JSON array if model adds extra text
 
   const firstBracket = text.indexOf("[");
   const lastBracket = text.lastIndexOf("]");
@@ -228,6 +242,7 @@ function parseAIResponse(raw) {
     );
   }
 
+
   try {
     const parsed = JSON.parse(text);
 
@@ -241,6 +256,19 @@ function parseAIResponse(raw) {
     ) {
       if (Array.isArray(parsed.insights)) {
         return parsed.insights;
+      }
+
+      if (
+        parsed.insights &&
+        typeof parsed.insights === "string"
+      ) {
+        return [
+          {
+            trend: parsed.insights,
+            why_it_matters: "",
+            what_to_watch_next: ""
+          }
+        ];
       }
 
       if (
@@ -270,13 +298,11 @@ function parseAIResponse(raw) {
 async function generateInsights(items, env) {
   if (!items || !items.length) return [];
 
-  const newsForAI = items
-    .slice(0, 20)
-    .map((item) => ({
-      source: item.source || "",
-      title: item.title || "",
-      description: item.description || ""
-    }));
+  const newsForAI = items.slice(0, 20).map((item) => ({
+    source: item.source || "",
+    title: item.title || "",
+    description: item.description || ""
+  }));
 
   const prompt = `
 You are AI Radar Insights.
@@ -300,57 +326,42 @@ ${JSON.stringify(newsForAI)}
 `;
 
   try {
-    const result = await env.AI.run(
-      MODEL,
-      {
-        prompt,
+    const result = await env.AI.run(MODEL, {
+      prompt,
+      temperature: 0.2,
+      max_tokens: 900,
 
-        temperature: 0.2,
-
-        max_tokens: 900,
-
-        response_format: {
-          type: "json_schema",
-
-          json_schema: {
-            type: "array",
-
-            minItems: 5,
-
-            maxItems: 5,
-
-            items: {
-              type: "object",
-
-              properties: {
-                trend: {
-                  type: "string"
-                },
-
-                why_it_matters: {
-                  type: "string"
-                },
-
-                what_to_watch_next: {
-                  type: "string"
-                }
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          type: "array",
+          minItems: 5,
+          maxItems: 5,
+          items: {
+            type: "object",
+            properties: {
+              trend: {
+                type: "string"
               },
-
-              required: [
-                "trend",
-                "why_it_matters",
-                "what_to_watch_next"
-              ],
-
-              additionalProperties: false
-            }
+              why_it_matters: {
+                type: "string"
+              },
+              what_to_watch_next: {
+                type: "string"
+              }
+            },
+            required: [
+              "trend",
+              "why_it_matters",
+              "what_to_watch_next"
+            ],
+            additionalProperties: false
           }
         }
       }
-    );
+    });
 
-    const raw =
-      result?.response ?? result;
+    const raw = result?.response ?? result;
 
     console.log(
       "AI RAW:",
@@ -362,11 +373,7 @@ ${JSON.stringify(newsForAI)}
     let parsed = raw;
 
     if (typeof parsed === "string") {
-      try {
-        parsed = JSON.parse(parsed);
-      } catch (error) {
-        parsed = parseAIResponse(parsed);
-      }
+      parsed = JSON.parse(parsed);
     }
 
     if (
@@ -378,18 +385,13 @@ ${JSON.stringify(newsForAI)}
     }
 
     if (!Array.isArray(parsed)) {
-      console.log(
-        "AI response was not an array"
-      );
-
+      console.log("AI response was not an array");
       return [];
     }
 
     return parsed
       .map((item) => ({
-        trend: String(
-          item?.trend || ""
-        ).trim(),
+        trend: String(item?.trend || "").trim(),
 
         why_it_matters: String(
           item?.why_it_matters || ""
@@ -399,14 +401,12 @@ ${JSON.stringify(newsForAI)}
           item?.what_to_watch_next || ""
         ).trim()
       }))
-
       .filter(
         (item) =>
           item.trend &&
           item.why_it_matters &&
           item.what_to_watch_next
       )
-
       .slice(0, 5);
 
   } catch (error) {
@@ -418,6 +418,7 @@ ${JSON.stringify(newsForAI)}
     return [];
   }
 }
+      
 
 
 // ================================
@@ -429,6 +430,10 @@ async function buildRadarData(
   forceRefresh = false
 ) {
 
+  // --------------------------------
+  // READ CACHE
+  // --------------------------------
+
   if (!forceRefresh) {
 
     try {
@@ -438,6 +443,7 @@ async function buildRadarData(
           CACHE_KEY,
           "json"
         );
+
 
       if (cached) {
 
@@ -458,6 +464,10 @@ async function buildRadarData(
   }
 
 
+  // --------------------------------
+  // COLLECT NEWS
+  // --------------------------------
+
   const items =
     await collectRadar();
 
@@ -468,12 +478,20 @@ async function buildRadarData(
   );
 
 
+  // --------------------------------
+  // GENERATE INSIGHTS
+  // --------------------------------
+
   const insights =
     await generateInsights(
       items,
       env
     );
 
+
+  // --------------------------------
+  // CREATE DATA
+  // --------------------------------
 
   const data = {
 
@@ -489,12 +507,17 @@ async function buildRadarData(
   };
 
 
+  // --------------------------------
+  // SAVE TO KV
+  // --------------------------------
+
   try {
 
     await env.RADAR_CACHE.put(
       CACHE_KEY,
       JSON.stringify(data)
     );
+
 
     console.log(
       "Radar data saved to KV"
@@ -517,7 +540,9 @@ async function buildRadarData(
 // HTML INSIGHT CARDS
 // ================================
 
-function buildInsightsHtml(insights) {
+function buildInsightsHtml(
+  insights
+) {
 
   if (
     !Array.isArray(insights) ||
@@ -525,23 +550,14 @@ function buildInsightsHtml(insights) {
   ) {
 
     return `
-      <div class="empty-state">
-
-        <div class="empty-icon">
-          ◌
-        </div>
-
-        <h3>
-          AI analysis temporarily unavailable
-        </h3>
-
+      <article class="insight-card">
+        <h3>AI analysis temporarily unavailable</h3>
         <p>
-          Fresh AI news is still available.
-          The next automatic refresh will retry
-          the analysis.
+          Fresh AI news is still available above.
+          The next scheduled refresh will try the
+          analysis again.
         </p>
-
-      </div>
+      </article>
     `;
   }
 
@@ -552,18 +568,9 @@ function buildInsightsHtml(insights) {
       (insight, index) => `
         <article class="insight-card">
 
-          <div class="insight-top">
-
-            <span class="insight-number">
-              ${String(index + 1).padStart(2, "0")}
-            </span>
-
-            <span class="insight-label">
-              AI RADAR
-            </span>
-
+          <div class="insight-number">
+            ${index + 1}
           </div>
-
 
           <h3>
             ${escapeHtml(
@@ -571,34 +578,28 @@ function buildInsightsHtml(insights) {
             )}
           </h3>
 
-
-          <div class="insight-block">
-
-            <div class="block-label">
-              WHY IT MATTERS
-            </div>
+          <div class="insight-section">
+            <strong>
+              Why it matters
+            </strong>
 
             <p>
               ${escapeHtml(
                 insight.why_it_matters
               )}
             </p>
-
           </div>
 
-
-          <div class="insight-block watch-block">
-
-            <div class="block-label">
-              WHAT TO WATCH NEXT
-            </div>
+          <div class="insight-section">
+            <strong>
+              What to watch next
+            </strong>
 
             <p>
               ${escapeHtml(
                 insight.what_to_watch_next
               )}
             </p>
-
           </div>
 
         </article>
@@ -726,16 +727,9 @@ async function workerFetch(
   // MAIN WEBSITE
   // ================================
 
-  const forceRefresh =
-    url.searchParams.get(
-      "refresh"
-    ) === "1";
-
-
   const data =
     await buildRadarData(
-      env,
-      forceRefresh
+      env
     );
 
 
@@ -747,25 +741,14 @@ async function workerFetch(
     data.items
       .slice(0, 15)
       .map(
-        (item, index) => `
-          <article class="news-card">
+        (item) => `
+          <article class="card">
 
-            <div class="news-meta">
-
-              <span class="source-pill">
-                ${escapeHtml(
-                  item.source
-                )}
-              </span>
-
-              <span class="news-number">
-                ${String(
-                  index + 1
-                ).padStart(2, "0")}
-              </span>
-
-            </div>
-
+            <small>
+              ${escapeHtml(
+                item.source
+              )}
+            </small>
 
             <h3>
               ${escapeHtml(
@@ -773,13 +756,11 @@ async function workerFetch(
               )}
             </h3>
 
-
             <p>
               ${escapeHtml(
                 item.description
               )}
             </p>
-
 
             <a
               href="${escapeHtml(
@@ -788,8 +769,7 @@ async function workerFetch(
               target="_blank"
               rel="noopener noreferrer"
             >
-              Read original source
-              <span>→</span>
+              Read source →
             </a>
 
           </article>
@@ -809,44 +789,14 @@ async function workerFetch(
 
 
   // ================================
-  // UPDATED TIME
-  // ================================
-
-  let updatedText =
-    "Recently updated";
-
-  try {
-
-    updatedText =
-      new Date(
-        data.updated
-      ).toLocaleString(
-        "en-IN",
-        {
-          dateStyle:
-            "medium",
-
-          timeStyle:
-            "short"
-        }
-      );
-
-  } catch (error) {
-
-    updatedText =
-      "Recently updated";
-  }
-
-
-  // ================================
   // HTML
   // ================================
 
   return new Response(
 
-`<!DOCTYPE html>
+    `<!DOCTYPE html>
 
-<html lang="en">
+<html>
 
 <head>
 
@@ -857,11 +807,6 @@ async function workerFetch(
   content="width=device-width,initial-scale=1"
 />
 
-<meta
-  name="description"
-  content="AI Radar Insights — automated AI trends, developments and news."
-/>
-
 <title>
 AI Radar Insights
 </title>
@@ -870,7 +815,7 @@ AI Radar Insights
 <style>
 
 /* ================================
-   RESET
+   BASE
 ================================ */
 
 * {
@@ -878,54 +823,26 @@ AI Radar Insights
 }
 
 
-html {
-  scroll-behavior: smooth;
-}
-
-
 body {
 
-  margin: 0;
-
   font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
+    Arial,
     sans-serif;
 
-  background:
-    #f6f7fb;
-
-  color:
-    #101114;
-
-  line-height:
-    1.5;
-}
-
-
-a {
-  color: inherit;
-}
-
-
-/* ================================
-   PAGE
-================================ */
-
-.page {
-
-  width:
-    min(1120px, calc(100% - 32px));
+  max-width:
+    1000px;
 
   margin:
-    0 auto;
+    40px auto;
 
   padding:
-    28px 0 60px;
+    20px;
+
+  background:
+    #ffffff;
+
+  color:
+    #111111;
 }
 
 
@@ -933,314 +850,30 @@ a {
    HEADER
 ================================ */
 
-.header {
-
-  position:
-    relative;
-
-  overflow:
-    hidden;
-
-  border:
-    1px solid #e5e7eb;
-
-  border-radius:
-    24px;
-
-  padding:
-    42px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #111318 0%,
-      #1c2029 55%,
-      #2b313d 100%
-    );
-
-  color:
-    #ffffff;
-
-  box-shadow:
-    0 18px 50px rgba(0,0,0,.10);
-}
-
-
-.header::after {
-
-  content: "";
-
-  position:
-    absolute;
-
-  width:
-    260px;
-
-  height:
-    260px;
-
-  right:
-    -100px;
-
-  top:
-    -120px;
-
-  border-radius:
-    50%;
-
-  border:
-    1px solid rgba(
-      255,
-      255,
-      255,
-      .12
-    );
-}
-
-
-.brand {
-
-  display:
-    inline-flex;
-
-  align-items:
-    center;
-
-  gap:
-    9px;
+h1 {
 
   font-size:
-    13px;
+    38px;
 
-  font-weight:
-    800;
-
-  letter-spacing:
-    1.4px;
-
-  color:
-    #d7dbe3;
-}
-
-
-.live-dot {
-
-  width:
+  margin-bottom:
     8px;
-
-  height:
-    8px;
-
-  border-radius:
-    50%;
-
-  background:
-    #ffffff;
-
-  box-shadow:
-    0 0 0 5px
-    rgba(
-      255,
-      255,
-      255,
-      .10
-    );
 }
 
 
-.header h1 {
-
-  margin:
-    18px 0 10px;
-
-  font-size:
-    clamp(
-      38px,
-      7vw,
-      64px
-    );
-
-  line-height:
-    .98;
-
-  letter-spacing:
-    -2.5px;
-}
-
-
-.header-subtitle {
-
-  max-width:
-    680px;
-
-  margin:
-    0;
+.subtitle {
 
   color:
-    #c5cad4;
+    #555;
 
-  font-size:
-    17px;
+  margin-bottom:
+    10px;
 }
 
 
-.header-bottom {
+.status {
 
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  justify-content:
-    space-between;
-
-  gap:
-    20px;
-
-  margin-top:
-    32px;
-}
-
-
-.stats {
-
-  display:
-    flex;
-
-  gap:
-    12px;
-
-  flex-wrap:
-    wrap;
-}
-
-
-.stat {
-
-  min-width:
-    120px;
-
-  padding:
-    13px 16px;
-
-  border:
-    1px solid
-    rgba(
-      255,
-      255,
-      255,
-      .12
-    );
-
-  border-radius:
-    14px;
-
-  background:
-    rgba(
-      255,
-      255,
-      255,
-      .06
-    );
-}
-
-
-.stat-number {
-
-  display:
-    block;
-
-  font-size:
-    21px;
-
-  font-weight:
-    800;
-}
-
-
-.stat-label {
-
-  display:
-    block;
-
-  margin-top:
-    2px;
-
-  color:
-    #aeb5c0;
-
-  font-size:
-    11px;
-
-  text-transform:
-    uppercase;
-
-  letter-spacing:
-    .8px;
-}
-
-
-.refresh {
-
-  display:
-    inline-flex;
-
-  align-items:
-    center;
-
-  gap:
-    8px;
-
-  padding:
-    12px 17px;
-
-  border:
-    1px solid
-    rgba(
-      255,
-      255,
-      255,
-      .18
-    );
-
-  border-radius:
-    12px;
-
-  background:
-    rgba(
-      255,
-      255,
-      255,
-      .08
-    );
-
-  color:
-    #ffffff;
-
-  text-decoration:
-    none;
-
-  font-size:
-    13px;
-
-  font-weight:
-    700;
-
-  white-space:
-    nowrap;
-}
-
-
-.refresh:hover {
-
-  background:
-    rgba(
-      255,
-      255,
-      255,
-      .14
-    );
+  margin-bottom:
+    25px;
 }
 
 
@@ -1248,167 +881,103 @@ a {
    SECTIONS
 ================================ */
 
-.section {
+section {
 
   margin-top:
-    46px;
+    35px;
 }
 
 
-.section-heading {
-
-  display:
-    flex;
-
-  align-items:
-    flex-end;
-
-  justify-content:
-    space-between;
-
-  gap:
-    20px;
+section h2 {
 
   margin-bottom:
     18px;
 }
 
 
-.section-title {
+/* ================================
+   NEWS CARDS
+================================ */
 
-  margin:
-    0;
+.card,
+.insight-card {
 
-  font-size:
-    27px;
+  border:
+    1px solid #ddd;
 
-  letter-spacing:
-    -.7px;
-}
-
-
-.section-description {
-
-  margin:
-    5px 0 0;
-
-  color:
-    #6b7280;
-
-  font-size:
-    14px;
-}
-
-
-.updated {
-
-  color:
-    #6b7280;
-
-  font-size:
+  border-radius:
     12px;
 
-  text-align:
-    right;
+  padding:
+    18px;
+
+  margin-bottom:
+    15px;
+
+  background:
+    #fff;
+}
+
+
+.card h3,
+.insight-card h3 {
+
+  margin:
+    8px 0 12px;
+
+  line-height:
+    1.35;
+}
+
+
+.card p,
+.insight-card p {
+
+  line-height:
+    1.55;
+
+  color:
+    #333;
+}
+
+
+.card a {
+
+  color:
+    #333;
+
+  text-decoration:
+    none;
+
+  font-weight:
+    600;
+}
+
+
+.card a:hover {
+
+  text-decoration:
+    underline;
+}
+
+
+small {
+
+  color:
+    #666;
 }
 
 
 /* ================================
-   INSIGHTS GRID
+   INSIGHT CARDS
 ================================ */
-
-.insights-grid {
-
-  display:
-    grid;
-
-  grid-template-columns:
-    repeat(
-      2,
-      minmax(0, 1fr)
-    );
-
-  gap:
-    16px;
-}
-
 
 .insight-card {
 
   position:
     relative;
 
-  overflow:
-    hidden;
-
-  min-height:
-    285px;
-
-  padding:
-    24px;
-
-  border:
-    1px solid #e2e4e9;
-
-  border-radius:
-    19px;
-
-  background:
-    #ffffff;
-
-  box-shadow:
-    0 8px 28px
-    rgba(
-      20,
-      25,
-      35,
-      .055
-    );
-
-  transition:
-    transform .18s ease,
-    box-shadow .18s ease;
-}
-
-
-.insight-card:hover {
-
-  transform:
-    translateY(-3px);
-
-  box-shadow:
-    0 14px 35px
-    rgba(
-      20,
-      25,
-      35,
-      .09
-    );
-}
-
-
-.insight-card:first-child {
-
-  grid-column:
-    span 2;
-
-  min-height:
-    250px;
-}
-
-
-.insight-top {
-
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  justify-content:
-    space-between;
-
-  margin-bottom:
+  padding-left:
     22px;
 }
 
@@ -1416,83 +985,186 @@ a {
 .insight-number {
 
   font-size:
-    13px;
+    14px;
 
   font-weight:
-    900;
+    bold;
 
-  letter-spacing:
-    1px;
-
-  color:
-    #111318;
-}
-
-
-.insight-label {
-
-  padding:
-    5px 9px;
-
-  border:
-    1px solid #e3e5ea;
-
-  border-radius:
-    999px;
+  margin-bottom:
+    8px;
 
   color:
-    #6b7280;
-
-  font-size:
-    10px;
-
-  font-weight:
-    800;
-
-  letter-spacing:
-    1px;
+    #666;
 }
 
 
 .insight-card h3 {
 
-  margin:
-    0 0 23px;
-
-  max-width:
-    850px;
-
   font-size:
-    clamp(
-      22px,
-      3vw,
-      31px
-    );
-
-  line-height:
-    1.15;
-
-  letter-spacing:
-    -.8px;
+    21px;
 }
 
 
-.insight-block {
+.insight-section {
 
   margin-top:
-    18px;
-
-  padding-top:
-    16px;
-
-  border-top:
-    1px solid #eceef2;
+    12px;
 }
 
 
-.block-label {
+.insight-section strong {
+
+  display:
+    block;
 
   margin-bottom:
-    6px;
+    3px;
+}
 
-  f
+
+.insight-section p {
+
+  margin-top:
+    4px;
+}
+
+
+/* ================================
+   MOBILE
+================================ */
+
+@media (
+  max-width: 600px
+) {
+
+  body {
+
+    margin:
+      15px auto;
+
+    padding:
+      15px;
+  }
+
+
+  h1 {
+
+    font-size:
+      30px;
+  }
+
+
+  .card,
+  .insight-card {
+
+    padding:
+      15px;
+  }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<h1>
+AI Radar Insights
+</h1>
+
+
+<p class="subtitle">
+Automated AI trends, tools and insights.
+</p>
+
+
+<p class="status">
+
+<strong>
+Live sources:
+</strong>
+
+${data.count}
+
+items collected
+
+</p>
+
+
+<section>
+
+<h2>
+Latest AI News
+</h2>
+
+
+${
+  cards ||
+  `
+    <div class="card">
+
+      No news items
+      available right now.
+
+    </div>
+  `
+}
+
+</section>
+
+
+<section>
+
+<h2>
+AI Insights
+</h2>
+
+
+${insightsSection}
+
+
+</section>
+
+
+</body>
+
+</html>`,
+
+    {
+
+      headers: {
+
+        "content-type":
+          "text/html;charset=UTF-8",
+
+        "Cache-Control":
+          "no-store"
+      }
+    }
+  );
+}
+
+
+// ================================
+// WORKER
+// ================================
+
+export default {
+  async fetch(request, env, ctx) {
+    return workerFetch(request, env);
+  },
+
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(
+      buildRadarData(env, true).catch((error) => {
+        console.log(
+          "Scheduled radar failed:",
+          String(error)
+        );
+      })
+    );
+  },
+};
