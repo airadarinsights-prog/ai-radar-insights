@@ -1065,7 +1065,133 @@ small {
 
 }
 
-</style>
+/* =========================================
+   AI RADAR INSIGHTS — PREMIUM UI
+   UI ONLY — BACKEND UNTOUCHED
+   ========================================= */
+
+body {
+  background: #f6f8fb;
+  color: #172033;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+main {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 48px 22px 70px;
+}
+
+h1 {
+  font-size: clamp(32px, 5vw, 46px);
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #667085;
+  font-size: 17px;
+  margin-bottom: 12px;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #eef7f1;
+  color: #16794a;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 34px;
+}
+
+h2 {
+  font-size: 25px;
+  letter-spacing: -0.5px;
+  margin: 34px 0 18px;
+}
+
+.card,
+.insight-card {
+  border: 1px solid #e4e8ef;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+  background: rgba(255,255,255,0.96);
+  box-shadow: 0 8px 28px rgba(16,24,40,0.06);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.card:hover,
+.insight-card:hover {
+  transform: translateY(-2px);
+  border-color: #d5dbe5;
+  box-shadow: 0 14px 34px rgba(16,24,40,0.10);
+}
+
+.card h3,
+.insight-card h3 {
+  font-size: 20px;
+  line-height: 1.35;
+  margin: 8px 0 12px;
+  color: #101828;
+}
+
+.card p,
+.insight-card p {
+  color: #475467;
+  line-height: 1.65;
+}
+
+.card a {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 8px;
+  color: #175cd3;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.card a:hover {
+  text-decoration: underline;
+}
+
+.insight-card {
+  border-left: 4px solid #175cd3;
+  background: linear-gradient(135deg, #ffffff, #f8fbff);
+}
+
+.insight-card h3 {
+  font-size: 21px;
+}
+
+.insight-card strong {
+  color: #101828;
+}
+
+@media (max-width: 700px) {
+  main {
+    padding: 30px 16px 50px;
+  }
+
+  .card,
+  .insight-card {
+    padding: 18px;
+    border-radius: 14px;
+  }
+
+  .card h3,
+  .insight-card h3 {
+    font-size: 18px;
+  }
+
+  h2 {
+    font-size: 22px;
+  }
+}</style>
 
 </head>
 
