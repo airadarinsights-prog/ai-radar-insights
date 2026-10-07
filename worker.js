@@ -307,14 +307,20 @@ async function generateInsights(items, env) {
   const prompt = `
 You are AI Radar Insights.
 
-Analyze the supplied AI news and identify exactly 5 distinct current trends.
+Analyze the supplied AI and technology news and produce exactly 5 distinct, evidence-based insights.
 
 Rules:
 - Use only information supported by the supplied news.
 - Do not invent facts.
-- Do not repeat the same story.
-- Keep every field concise.
-- Return exactly 5 objects.
+- Synthesize related stories into a broader trend when the evidence supports it.
+- Do not restate headlines or simply summarize individual stories.
+- Explain practical implications, relevant trade-offs, and plausible second-order effects.
+- Make clear who or what may be affected and why the development matters in practice.
+- Give concrete, observable signals to watch next, such as launches, adoption, pricing, regulation, or measured results when relevant to the supplied evidence.
+- Avoid generic filler, vague predictions, and unsupported certainty.
+- If evidence is limited or mixed, say so and use cautious wording.
+- Keep each field concise and specific.
+- Return exactly 5 insight objects, using only the fields below.
 
 Each object must contain:
 - trend
@@ -623,6 +629,72 @@ async function workerFetch(
 
 
   // ================================
+  // STATIC INFORMATION PAGES
+  // ================================
+
+  const staticPages = {
+    "/about": {
+      title: "About AI Radar Insights",
+      body: `
+        <p>AI Radar Insights tracks selected public news sources covering artificial intelligence and technology. We organize notable developments and use AI-assisted analysis to identify recurring themes, explain their context, and offer an original perspective on what may matter next.</p>
+        <p>Our analysis is generated from the information available in the linked reports. It is intended to add context to those sources, not to replace them.</p>
+      `
+    },
+    "/privacy": {
+      title: "Privacy Policy",
+      body: `
+        <p>AI Radar Insights may process basic technical information needed to operate and protect the website, such as request and device information. We do not currently use analytics or advertising cookies. If analytics or advertising cookies are introduced in the future, this policy will be updated to explain them.</p>
+        <p>News links lead to third-party websites. Their privacy practices and content are governed by their own policies, which we encourage you to review.</p>
+        <p>We may update this policy as the site changes. Updates will be published on this page. Questions about privacy can be sent to <a href="mailto:airadarinsights@gmail.com">airadarinsights@gmail.com</a>.</p>
+      `
+    },
+    "/contact": {
+      title: "Contact AI Radar Insights",
+      body: `
+        <p>For questions, feedback, corrections, or business inquiries, email <a href="mailto:airadarinsights@gmail.com">airadarinsights@gmail.com</a>.</p>
+      `
+    },
+    "/disclaimer": {
+      title: "Disclaimer",
+      body: `
+        <p>News links on AI Radar Insights belong to their original publishers. AI-assisted analysis is generated from available information and may contain errors or omissions.</p>
+        <p>All content is provided for general informational purposes and is not professional advice. Please consult qualified professionals for advice suited to your situation.</p>
+        <p>Affiliate or sponsored relationships may apply to particular content when relevant; any such relationship will be disclosed with that content.</p>
+      `
+    }
+  };
+
+  const staticPage = staticPages[url.pathname];
+
+  if (staticPage) {
+    return new Response(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>${staticPage.title} | AI Radar Insights</title>
+  <style>
+    body { max-width: 760px; margin: 48px auto; padding: 0 22px; color: #172033; background: #f6f8fb; font: 16px/1.7 Arial, sans-serif; }
+    main { padding: 30px; background: #fff; border: 1px solid #e4e8ef; border-radius: 16px; }
+    h1 { line-height: 1.2; }
+    a { color: #175cd3; }
+    nav { margin-top: 28px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>${staticPage.title}</h1>
+    ${staticPage.body}
+    <nav><a href="/">AI Radar Insights home</a></nav>
+  </main>
+</body>
+</html>`, {
+      headers: { "content-type": "text/html;charset=UTF-8" }
+    });
+  }
+
+
+  // ================================
   // API TEST
   // ================================
 
@@ -916,6 +988,8 @@ section h2 {
 
   background:
     #fff;
+box-shadow:
+0 4px 14px rgba(0,0,0,0.06);
 }
 
 
@@ -1063,7 +1137,133 @@ small {
 
 }
 
-</style>
+/* =========================================
+   AI RADAR INSIGHTS — PREMIUM UI
+   UI ONLY — BACKEND UNTOUCHED
+   ========================================= */
+
+body {
+  background: #f6f8fb;
+  color: #172033;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+main {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 48px 22px 70px;
+}
+
+h1 {
+  font-size: clamp(32px, 5vw, 46px);
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #667085;
+  font-size: 17px;
+  margin-bottom: 12px;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #eef7f1;
+  color: #16794a;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 34px;
+}
+
+h2 {
+  font-size: 25px;
+  letter-spacing: -0.5px;
+  margin: 34px 0 18px;
+}
+
+.card,
+.insight-card {
+  border: 1px solid #e4e8ef;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 16px;
+  background: rgba(255,255,255,0.96);
+  box-shadow: 0 8px 28px rgba(16,24,40,0.06);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.card:hover,
+.insight-card:hover {
+  transform: translateY(-2px);
+  border-color: #d5dbe5;
+  box-shadow: 0 14px 34px rgba(16,24,40,0.10);
+}
+
+.card h3,
+.insight-card h3 {
+  font-size: 20px;
+  line-height: 1.35;
+  margin: 8px 0 12px;
+  color: #101828;
+}
+
+.card p,
+.insight-card p {
+  color: #475467;
+  line-height: 1.65;
+}
+
+.card a {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 8px;
+  color: #175cd3;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.card a:hover {
+  text-decoration: underline;
+}
+
+.insight-card {
+  border-left: 4px solid #175cd3;
+  background: linear-gradient(135deg, #ffffff, #f8fbff);
+}
+
+.insight-card h3 {
+  font-size: 21px;
+}
+
+.insight-card strong {
+  color: #101828;
+}
+
+@media (max-width: 700px) {
+  main {
+    padding: 30px 16px 50px;
+  }
+
+  .card,
+  .insight-card {
+    padding: 18px;
+    border-radius: 14px;
+  }
+
+  .card h3,
+  .insight-card h3 {
+    font-size: 18px;
+  }
+
+  h2 {
+    font-size: 22px;
+  }
+}</style>
 
 </head>
 
@@ -1127,6 +1327,29 @@ ${insightsSection}
 
 
 </section>
+
+
+<section>
+
+<h2>
+How AI Radar Insights Works
+</h2>
+
+<p>
+We track selected AI and technology sources, organize notable developments, and use AI-assisted analysis to surface recurring themes, useful context, and signals to watch next.
+</p>
+
+</section>
+
+
+<footer>
+<nav aria-label="Footer navigation">
+  <a href="/about">About</a> |
+  <a href="/privacy">Privacy</a> |
+  <a href="/contact">Contact</a> |
+  <a href="/disclaimer">Disclaimer</a>
+</nav>
+</footer>
 
 
 </body>
