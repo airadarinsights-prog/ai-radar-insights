@@ -312,13 +312,15 @@ Analyze the supplied AI and technology news and produce exactly 5 distinct, evid
 Rules:
 - Use only information supported by the supplied news.
 - Do not invent facts.
-- Synthesize related stories into a broader trend when the evidence supports it.
+- First group related stories into themes. When several stories support one theme, synthesize them into a single insight; do not spend multiple insights on that theme.
+- Make all 5 insights materially different, each grounded in a separate theme or specific development in the supplied stories.
+- Name the specific supported theme in trend; never use a generic label such as "AI", "AI is growing", or "AI is becoming more popular".
 - Do not restate headlines or simply summarize individual stories.
-- Explain practical implications, relevant trade-offs, and plausible second-order effects.
-- Make clear who or what may be affected and why the development matters in practice.
-- Give concrete, observable signals to watch next, such as launches, adoption, pricing, regulation, or measured results when relevant to the supplied evidence.
+- In why_it_matters, explain a concrete practical implication, trade-off, or affected stakeholder for that theme.
+- Give each insight a different implication and a different what_to_watch_next signal. Make each signal concrete and observable, and tie it to its insight (for example, a launch, adoption, pricing change, regulatory action, or measured result when supported by the supplied evidence).
 - Avoid generic filler, vague predictions, and unsupported certainty.
 - If evidence is limited or mixed, say so and use cautious wording.
+- If the stories do not support 5 broad recurring themes, use distinct, specific supported developments for the remaining insights rather than inventing themes or duplicating an insight.
 - Keep each field concise and specific.
 - Return exactly 5 insight objects, using only the fields below.
 
