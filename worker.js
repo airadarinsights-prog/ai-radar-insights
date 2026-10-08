@@ -618,6 +618,63 @@ function buildInsightsHtml(
 
 
 // ================================
+// HOMEPAGE RADAR ANALYSIS
+// ================================
+
+function buildRadarAnalysisHtml(insights) {
+  const supported = Array.isArray(insights)
+    ? insights.filter((insight) =>
+        insight?.trend &&
+        insight?.why_it_matters &&
+        insight?.what_to_watch_next
+      ).slice(0, 3)
+    : [];
+
+  const joinPoints = (values) => {
+    if (values.length < 2) return values[0] || "";
+    return `${values.slice(0, -1).join("; ")}; and ${values[values.length - 1]}`;
+  };
+
+  const parts = supported.length
+    ? [
+        {
+          title: "Biggest Shift Today",
+          text: `The strongest themes across today's coverage are ${joinPoints(supported.map((insight) => insight.trend))}.`
+        },
+        {
+          title: "Who Is Affected",
+          text: joinPoints(supported.map((insight) => insight.why_it_matters))
+        },
+        {
+          title: "What May Change Next",
+          text: joinPoints(supported.map((insight) => insight.what_to_watch_next))
+        }
+      ]
+    : [
+        {
+          title: "Biggest Shift Today",
+          text: "The available stories do not yet support a clear cross-story shift."
+        },
+        {
+          title: "Who Is Affected",
+          text: "The available analysis does not identify a supported affected group yet."
+        },
+        {
+          title: "What May Change Next",
+          text: "There is not enough supported analysis to identify what may change next."
+        }
+      ];
+
+  return parts.map((part) => `
+    <article class="insight-card">
+      <h3>${part.title}</h3>
+      <p>${escapeHtml(part.text)}</p>
+    </article>
+  `).join("");
+}
+
+
+// ================================
 // WORKER FETCH
 // ================================
 
@@ -858,6 +915,11 @@ async function workerFetch(
 
   const insightsSection =
     buildInsightsHtml(
+      data.insights
+    );
+
+  const radarAnalysisSection =
+    buildRadarAnalysisHtml(
       data.insights
     );
 
@@ -1327,6 +1389,17 @@ AI Insights
 
 ${insightsSection}
 
+
+</section>
+
+
+<section>
+
+<h2>
+Today's AI Radar Analysis
+</h2>
+
+${radarAnalysisSection}
 
 </section>
 
