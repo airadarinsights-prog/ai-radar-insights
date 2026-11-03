@@ -757,7 +757,7 @@ async function workerFetch(
   // AI TOOLS PAGE (static asset)
   // ================================
 
-  if (url.pathname === "/tools" || url.pathname === "/tools/" || url.pathname === "/tools.html") {
+  if (url.pathname === "/tools" || url.pathname === "/tools/") {
     if (!env.ASSETS) return new Response("Tools page asset binding is not configured.", { status: 503 });
     return env.ASSETS.fetch(new Request(new URL("/tools.html", request.url), request));
   }
