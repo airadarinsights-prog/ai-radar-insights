@@ -754,6 +754,15 @@ async function workerFetch(
 
 
   // ================================
+  // AI TOOLS PAGE (static asset)
+  // ================================
+
+  if (url.pathname === "/tools" || url.pathname === "/tools/" || url.pathname === "/tools.html") {
+    if (!env.ASSETS) return new Response("Tools page asset binding is not configured.", { status: 503 });
+    return env.ASSETS.fetch(new Request(new URL("/tools.html", request.url), request));
+  }
+
+  // ================================
   // API TEST
   // ================================
 
@@ -1422,7 +1431,7 @@ We track selected AI and technology sources, organize notable developments, and 
   <a href="/about">About</a> |
   <a href="/privacy">Privacy</a> |
   <a href="/contact">Contact</a> |
-  <a href="/disclaimer">Disclaimer</a>
+  <a href="/disclaimer">Disclaimer</a> |\n  <a href="/tools">AI Tools &amp; Calculators</a>
 </nav>
 </footer>
 
