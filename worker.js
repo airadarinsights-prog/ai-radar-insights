@@ -694,6 +694,7 @@ async function workerFetch(
   const staticPages = {
     "/about": {
       title: "About AI Radar Insights",
+      description: "Learn how AI Radar Insights selects news, reviews AI tool listings, and handles corrections and commercial disclosures.",
       body: `
         <p>AI Radar Insights tracks selected public news sources covering artificial intelligence and technology. We organize notable developments and use AI-assisted analysis to identify recurring themes, explain their context, and offer an original perspective on what may matter next.</p>
         <p>Our AI Tools directory summarizes products using vendor product and pricing pages. Each listing shows its source links and the date checked. Vendor pages control current features, availability, and pricing. Listings are informational and are not endorsements.</p>
@@ -703,6 +704,7 @@ async function workerFetch(
     },
     "/privacy": {
       title: "Privacy Policy",
+      description: "Read how AI Radar Insights handles website data and how the AI tool directory calculator processes your inputs locally.",
       body: `
         <p>AI Radar Insights may process basic technical information needed to operate and protect the website, such as request and device information. We do not currently use analytics or advertising cookies. If analytics or advertising cookies are introduced in the future, this policy will be updated to explain them.</p>
         <p>The AI Tools directory search, comparison, and savings calculator run in your browser. Calculator values are not sent to our server by the page. The calculator does not ask for names, account details, or uploaded files.</p>
@@ -712,12 +714,14 @@ async function workerFetch(
     },
     "/contact": {
       title: "Contact AI Radar Insights",
+      description: "Contact AI Radar Insights with questions, corrections, feedback, or business inquiries.",
       body: `
         <p>For questions, feedback, corrections, or business inquiries, email <a href="mailto:airadarinsights@gmail.com">airadarinsights@gmail.com</a>.</p>
       `
     },
     "/disclaimer": {
       title: "Disclaimer",
+      description: "Read the limits of AI Radar Insights news analysis, tool descriptions, and calculator estimates.",
       body: `
         <p>News links on AI Radar Insights belong to their original publishers. AI-assisted analysis is generated from available information and may contain errors or omissions.</p>
         <p>AI tool descriptions and source links are provided for general information. Check the vendor's current terms, regional availability, data handling, and pricing before choosing a product. Calculator results are estimates based only on values entered by the visitor; they are not financial advice or guaranteed savings.</p>
@@ -735,7 +739,7 @@ async function workerFetch(
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="${staticPage.title} and information about AI Radar Insights, its sources, privacy, and editorial approach.">
+  <meta name="description" content="${staticPage.description}">
   <meta name="robots" content="index,follow">
   <title>${staticPage.title} | AI Radar Insights</title>
   <style>
