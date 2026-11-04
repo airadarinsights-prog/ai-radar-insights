@@ -1446,7 +1446,8 @@ We track selected AI and technology sources, organize notable developments, and 
   <a href="/about">About</a> |
   <a href="/privacy">Privacy</a> |
   <a href="/contact">Contact</a> |
-  <a href="/disclaimer">Disclaimer</a> |\n  <a href="/tools">AI Tools &amp; Calculators</a>
+  <a href="/disclaimer">Disclaimer</a> |
+  <a href="/tools">AI Tools &amp; Calculators</a>
 </nav>
 </footer>
 
