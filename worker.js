@@ -696,13 +696,16 @@ async function workerFetch(
       title: "About AI Radar Insights",
       body: `
         <p>AI Radar Insights tracks selected public news sources covering artificial intelligence and technology. We organize notable developments and use AI-assisted analysis to identify recurring themes, explain their context, and offer an original perspective on what may matter next.</p>
-        <p>Our analysis is generated from the information available in the linked reports. It is intended to add context to those sources, not to replace them.</p>
+        <p>Our AI Tools directory summarizes products using vendor product and pricing pages. Each listing shows its source links and the date checked. Vendor pages control current features, availability, and pricing. Listings are informational and are not endorsements.</p>
+        <p>We do not currently use affiliate links in the tools directory. If that changes, any commercial relationship will be clearly disclosed alongside the relevant link.</p>
+        <p>Our analysis is generated from the information available in linked reports. It is intended to add context to those sources, not to replace them. Corrections and feedback are welcome.</p>
       `
     },
     "/privacy": {
       title: "Privacy Policy",
       body: `
         <p>AI Radar Insights may process basic technical information needed to operate and protect the website, such as request and device information. We do not currently use analytics or advertising cookies. If analytics or advertising cookies are introduced in the future, this policy will be updated to explain them.</p>
+        <p>The AI Tools directory search, comparison, and savings calculator run in your browser. Calculator values are not sent to our server by the page. The calculator does not ask for names, account details, or uploaded files.</p>
         <p>News links lead to third-party websites. Their privacy practices and content are governed by their own policies, which we encourage you to review.</p>
         <p>We may update this policy as the site changes. Updates will be published on this page. Questions about privacy can be sent to <a href="mailto:airadarinsights@gmail.com">airadarinsights@gmail.com</a>.</p>
       `
@@ -717,8 +720,9 @@ async function workerFetch(
       title: "Disclaimer",
       body: `
         <p>News links on AI Radar Insights belong to their original publishers. AI-assisted analysis is generated from available information and may contain errors or omissions.</p>
+        <p>AI tool descriptions and source links are provided for general information. Check the vendor's current terms, regional availability, data handling, and pricing before choosing a product. Calculator results are estimates based only on values entered by the visitor; they are not financial advice or guaranteed savings.</p>
         <p>All content is provided for general informational purposes and is not professional advice. Please consult qualified professionals for advice suited to your situation.</p>
-        <p>Affiliate or sponsored relationships may apply to particular content when relevant; any such relationship will be disclosed with that content.</p>
+        <p>We do not currently use affiliate links in the AI Tools directory. Any future sponsored or affiliate relationship will be disclosed with the relevant content.</p>
       `
     }
   };
@@ -731,6 +735,8 @@ async function workerFetch(
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="${staticPage.title} and information about AI Radar Insights, its sources, privacy, and editorial approach.">
+  <meta name="robots" content="index,follow">
   <title>${staticPage.title} | AI Radar Insights</title>
   <style>
     body { max-width: 760px; margin: 48px auto; padding: 0 22px; color: #172033; background: #f6f8fb; font: 16px/1.7 Arial, sans-serif; }
@@ -744,7 +750,7 @@ async function workerFetch(
   <main>
     <h1>${staticPage.title}</h1>
     ${staticPage.body}
-    <nav><a href="/">AI Radar Insights home</a></nav>
+    <nav aria-label="Site information"><a href="/">Home</a> · <a href="/tools">AI tools directory and calculator</a> · <a href="/about">About</a> · <a href="/privacy">Privacy</a> · <a href="/disclaimer">Disclaimer</a> · <a href="/contact">Contact</a></nav>
   </main>
 </body>
 </html>`, {
@@ -941,7 +947,7 @@ async function workerFetch(
 
     `<!DOCTYPE html>
 
-<html>
+<html lang="en">
 
 <head>
 
@@ -952,8 +958,13 @@ async function workerFetch(
   content="width=device-width,initial-scale=1"
 />
 
+<meta name="description" content="Follow selected AI and technology news, evidence-based trend analysis, and practical tools from AI Radar Insights.">
+<meta name="robots" content="index,follow">
+<meta property="og:title" content="AI Radar Insights | AI News & Trend Analysis">
+<meta property="og:description" content="Selected AI and technology news with AI-assisted analysis and practical tools.">
+
 <title>
-AI Radar Insights
+AI Radar Insights | AI News &amp; Trend Analysis
 </title>
 
 
